@@ -1,0 +1,39 @@
+import whisper
+import pyaudio
+from vosk import Model, KaldiRecognizer
+import requests
+import json
+
+# 1. إعداد الاستماع المستمر بكفاءة
+def listen_for_wake_word():
+    model = Model("vosk-model-small-ar") # نموذج عربي صغير
+    rec = KaldiRecognizer(model, 16000)
+    
+    while True:
+        # تسجيل صوتي قصير
+        data = audio_stream.read(4000)
+        if rec.AcceptWaveform(data):
+            result = json.loads(rec.Result())
+            if "ليل" in result.get("text", ""):
+                return result["text"]
+
+# 2. معالجة اللغة الطبيعية (NLP)
+def process_query(text):
+    # إرسال النص إلى نموذج LLM مع سياق الذاكرة
+    response = requests.post("http://localhost:8000/generate", json={
+        "query": text,
+        "memory_context": get_user_memory()
+    })
+    return response.json()["reply"]
+
+# 3. توليد الصوت
+def speak(text):
+    # استخدام TTS بصوت أنثوي رقيق
+    tts_url = generate_tts_voice(text, voice="layl_fine_female")
+    play_audio(tts_url)
+
+# حلقة العمل الرئيسية
+while True:
+    user_input = listen_for_wake_word()
+    ai_response = process_query(user_input)
+    speak(ai_response)
